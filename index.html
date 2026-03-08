@@ -1,0 +1,2369 @@
+ad ai <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel AI - Smart Spreadsheet</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --grid-line: #2d2d44;
+            --cell-selection: rgba(233, 69, 96, 0.3);
+            --cell-hover: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--secondary);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--grid-line);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--highlight), #ff6b6b);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--text-primary), var(--highlight));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff5a75;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #1a4a7a;
+        }
+
+        /* Menu Bar */
+        .menu-bar {
+            background: var(--secondary);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--grid-line);
+        }
+
+        .menu-item {
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .menu-item:hover {
+            background: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .menu-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--secondary);
+            border: 1px solid var(--grid-line);
+            border-radius: 6px;
+            min-width: 220px;
+            padding: 8px 0;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .menu-item:hover .menu-dropdown {
+            display: block;
+        }
+
+        .menu-dropdown-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .menu-dropdown-item:hover {
+            background: var(--accent);
+        }
+
+        .menu-dropdown-item .shortcut {
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--grid-line);
+            margin: 4px 0;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: var(--secondary);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--grid-line);
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-right: 12px;
+            border-right: 1px solid var(--grid-line);
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .toolbar-btn.active {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .toolbar-select {
+            background: var(--accent);
+            color: var(--text-primary);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Formula Bar */
+        .formula-bar {
+            background: var(--secondary);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--grid-line);
+        }
+
+        .cell-reference {
+            background: var(--accent);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .formula-input {
+            flex: 1;
+            background: var(--primary);
+            border: 1px solid var(--grid-line);
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .formula-input:focus {
+            border-color: var(--highlight);
+        }
+
+        /* Spreadsheet Container */
+        .spreadsheet-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            background: var(--primary);
+        }
+
+        .spreadsheet {
+            display: grid;
+            min-width: fit-content;
+        }
+
+        .corner-header {
+            background: var(--secondary);
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 30;
+            min-width: 50px;
+            min-height: 28px;
+            border-right: 1px solid var(--grid-line);
+            border-bottom: 1px solid var(--grid-line);
+        }
+
+        .col-header {
+            background: var(--secondary);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            min-width: 120px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-right: 1px solid var(--grid-line);
+            border-bottom: 1px solid var(--grid-line);
+        }
+
+        .row-header {
+            background: var(--secondary);
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            min-height: 28px;
+            width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-right: 1px solid var(--grid-line);
+            border-bottom: 1px solid var(--grid-line);
+        }
+
+        .cell {
+            min-width: 120px;
+            min-height: 28px;
+            padding: 4px 8px;
+            border-right: 1px solid var(--grid-line);
+            border-bottom: 1px solid var(--grid-line);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            cursor: cell;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            transition: background 0.1s;
+        }
+
+        .cell:hover {
+            background: var(--cell-hover);
+        }
+
+        .cell.selected {
+            background: var(--cell-selection);
+            outline: 2px solid var(--highlight);
+            outline-offset: -2px;
+            z-index: 10;
+        }
+
+        .cell.editing {
+            padding: 0;
+        }
+
+        .cell-input {
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            border: none;
+            padding: 4px 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .cell.bold { font-weight: 600; }
+        .cell.italic { font-style: italic; }
+        .cell.underline { text-decoration: underline; }
+
+        /* AI Sidebar */
+        .ai-sidebar {
+            width: 0;
+            background: var(--secondary);
+            border-left: 1px solid var(--grid-line);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        .ai-sidebar.open {
+            width: 380px;
+        }
+
+        .ai-sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--grid-line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ai-sidebar-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, var(--highlight), #ff6b6b);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+
+        .close-sidebar:hover {
+            color: var(--text-primary);
+        }
+
+        .ai-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--grid-line);
+        }
+
+        .ai-tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .ai-tab:hover {
+            color: var(--text-primary);
+            background: var(--cell-hover);
+        }
+
+        .ai-tab.active {
+            color: var(--highlight);
+            border-bottom-color: var(--highlight);
+        }
+
+        .ai-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .ai-chat {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: 100%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .chat-message.user {
+            background: var(--accent);
+            align-self: flex-end;
+        }
+
+        .chat-message.ai {
+            background: var(--primary);
+            border: 1px solid var(--grid-line);
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+            padding-top: 12px;
+            border-top: 1px solid var(--grid-line);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--primary);
+            border: 1px solid var(--grid-line);
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            outline: none;
+            resize: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--highlight);
+        }
+
+        .chat-send {
+            background: var(--highlight);
+            border: none;
+            border-radius: 6px;
+            width: 40px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chat-send:hover {
+            background: #ff5a75;
+        }
+
+        /* AI Suggestions */
+        .ai-suggestions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .suggestion-card {
+            background: var(--primary);
+            border: 1px solid var(--grid-line);
+            border-radius: 8px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-card:hover {
+            border-color: var(--highlight);
+            transform: translateX(4px);
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .suggestion-title .icon {
+            color: var(--highlight);
+        }
+
+        .suggestion-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .suggestion-preview {
+            margin-top: 10px;
+            background: var(--secondary);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--secondary);
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--grid-line);
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .loading span {
+            width: 6px;
+            height: 6px;
+            background: var(--highlight);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading span:nth-child(1) { animation-delay: -0.32s; }
+        .loading span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-action {
+            background: var(--accent);
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .quick-action:hover {
+            background: var(--highlight);
+            transform: translateY(-2px);
+        }
+
+        .quick-action-icon {
+            font-size: 18px;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* Data Analysis Panel */
+        .analysis-panel {
+            display: none;
+        }
+
+        .analysis-panel.active {
+            display: block;
+        }
+
+        .analysis-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--primary);
+            border: 1px solid var(--grid-line);
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--highlight);
+        }
+
+        /* AI Modal */
+        .ai-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ai-modal.active {
+            display: flex;
+        }
+
+        .ai-modal-content {
+            background: var(--secondary);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ai-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--grid-line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ai-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .ai-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Function Categories */
+        .function-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .function-category {
+            padding: 8px 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 20px;
+            color: var(--text-primary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .function-category:hover, .function-category.active {
+            background: var(--highlight);
+        }
+
+        .function-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .function-item {
+            background: var(--primary);
+            border: 1px solid var(--grid-line);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .function-item:hover {
+            border-color: var(--highlight);
+            transform: translateY(-2px);
+        }
+
+        .function-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--highlight);
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .function-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* AI Wizard */
+        .ai-wizard {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .wizard-step {
+            display: none;
+        }
+
+        .wizard-step.active {
+            display: block;
+        }
+
+        .wizard-step-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .wizard-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .wizard-option {
+            background: var(--primary);
+            border: 1px solid var(--grid-line);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .wizard-option:hover {
+            border-color: var(--highlight);
+            background: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .wizard-option-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .wizard-option-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .wizard-option-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--grid-line);
+        }
+
+        /* Data Generation Options */
+        .data-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .data-option {
+            background: var(--primary);
+            border: 1px solid var(--grid-line);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .data-option:hover {
+            border-color: var(--highlight);
+            transform: translateY(-2px);
+        }
+
+        .data-option-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .data-option-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .data-option-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--highlight);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            background: var(--secondary);
+            border: 1px solid var(--highlight);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">X</div>
+                <span class="logo-text">Excel AI</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="newSpreadsheet()">
+                    <span>📄</span> New
+                </button>
+                <button class="btn btn-secondary" onclick="saveSpreadsheet()">
+                    <span>💾</span> Save
+                </button>
+                <button class="btn btn-primary" onclick="toggleAIWizard()">
+                    <span>🤖</span> AI Wizard
+                </button>
+            </div>
+        </header>
+
+        <!-- Menu Bar -->
+        <div class="menu-bar">
+            <div class="menu-item" onclick="newSpreadsheet()">
+                📄 File
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="newSpreadsheet()">New <span class="shortcut">Ctrl+N</span></div>
+                    <div class="menu-dropdown-item" onclick="saveSpreadsheet()">Save <span class="shortcut">Ctrl+S</span></div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-dropdown-item" onclick="exportToCSV()">Export CSV</div>
+                    <div class="menu-dropdown-item" onclick="exportToJSON()">Export JSON</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                ✏️ Home
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="formatBold()">Bold <span class="shortcut">Ctrl+B</span></div>
+                    <div class="menu-dropdown-item" onclick="formatItalic()">Italic <span class="shortcut">Ctrl+I</span></div>
+                    <div class="menu-dropdown-item" onclick="formatUnderline()">Underline <span class="shortcut">Ctrl+U</span></div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-dropdown-item" onclick="setAlignment('left')">Align Left</div>
+                    <div class="menu-dropdown-item" onclick="setAlignment('center')">Align Center</div>
+                    <div class="menu-dropdown-item" onclick="setAlignment('right')">Align Right</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                📊 Insert
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="openAIFunctions()">🤖 AI Functions</div>
+                    <div class="menu-dropdown-item" onclick="openChartWizard()">📈 Chart</div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-dropdown-item" onclick="insertRow()">Insert Row</div>
+                    <div class="menu-dropdown-item" onclick="insertColumn()">Insert Column</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                📈 Data
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="analyzeSelectedData()">📊 Analyze Data</div>
+                    <div class="menu-dropdown-item" onclick="sortData()">↕️ Sort</div>
+                    <div class="menu-dropdown-item" onclick="filterData()">🔍 Filter</div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-dropdown-item" onclick="removeDuplicates()">🗑️ Remove Duplicates</div>
+                    <div class="menu-dropdown-item" onclick="validateData()">✓ Data Validation</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                🤖 AI
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="toggleAIWizard()">🧙 AI Wizard</div>
+                    <div class="menu-dropdown-item" onclick="generateWithAI()">✨ Generate Data</div>
+                    <div class="menu-dropdown-item" onclick="analyzeWithAI()">📊 AI Analysis</div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-dropdown-item" onclick="suggestFormulas()">🔢 Smart Formulas</div>
+                    <div class="menu-dropdown-item" onclick="getAIInsights()">💡 AI Insights</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                ❓ Help
+                <div class="menu-dropdown">
+                    <div class="menu-dropdown-item" onclick="showHelp()">📖 Documentation</div>
+                    <div class="menu-dropdown-item" onclick="showShortcuts()">⌨️ Shortcuts</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="formatBold()" title="Bold (Ctrl+B)"><b>B</b></button>
+                <button class="toolbar-btn" onclick="formatItalic()" title="Italic (Ctrl+I)"><em>I</em></button>
+                <button class="toolbar-btn" onclick="formatUnderline()" title="Underline (Ctrl+U)"><u>U</u></button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="setAlignment('left')" title="Align Left">⬅</button>
+                <button class="toolbar-btn" onclick="setAlignment('center')" title="Align Center">⬌</button>
+                <button class="toolbar-btn" onclick="setAlignment('right')" title="Align Right">➡</button>
+            </div>
+            <div class="toolbar-group">
+                <select class="toolbar-select" onchange="setTextColor(this.value)">
+                    <option value="">Text Color</option>
+                    <option value="#e94560">Red</option>
+                    <option value="#4ecca3">Green</option>
+                    <option value="#3498db">Blue</option>
+                    <option value="#f39c12">Yellow</option>
+                    <option value="#9b59b6">Purple</option>
+                </select>
+                <select class="toolbar-select" onchange="setBgColor(this.value)">
+                    <option value="">Bg Color</option>
+                    <option value="#e94560">Red</option>
+                    <option value="#4ecca3">Green</option>
+                    <option value="#3498db">Blue</option>
+                    <option value="#f39c12">Yellow</option>
+                    <option value="#9b59b6">Purple</option>
+                </select>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="openAIFunctions()" title="AI Functions">🤖</button>
+                <select class="toolbar-select" onchange="insertFunction(this.value)">
+                    <option value="">Functions</option>
+                    <option value="=SUM()">SUM</option>
+                    <option value="=AVERAGE()">AVERAGE</option>
+                    <option value="=COUNT()">COUNT</option>
+                    <option value="=MAX()">MAX</option>
+                    <option value="=MIN()">MIN</option>
+                    <option value="=IF()">IF</option>
+                    <option value="=VLOOKUP()">VLOOKUP</option>
+                    <option value="=CONCATENATE()">CONCATENATE</option>
+                    <option value="=TODAY()">TODAY</option>
+                    <option value="=NOW()">NOW</option>
+                </select>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="undo()" title="Undo (Ctrl+Z)">↩</button>
+                <button class="toolbar-btn" onclick="redo()" title="Redo (Ctrl+Y)">↪</button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="toggleAIWizard()" title="AI Wizard">🧙</button>
+                <button class="toolbar-btn" onclick="generateWithAI()" title="Generate Data">🎲</button>
+                <button class="toolbar-btn" onclick="analyzeWithAI()" title="AI Analysis">📊</button>
+            </div>
+        </div>
+
+        <!-- Formula Bar -->
+        <div class="formula-bar">
+            <div class="cell-reference" id="cellRef">A1</div>
+            <input type="text" class="formula-input" id="formulaInput" placeholder="Enter value or formula (e.g., =SUM(A1:A10))" onkeydown="handleFormulaKey(event)">
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Spreadsheet Container -->
+            <div class="spreadsheet-container">
+                <div class="spreadsheet" id="spreadsheet"></div>
+            </div>
+
+            <!-- AI Sidebar -->
+            <aside class="ai-sidebar" id="aiSidebar">
+                <div class="ai-sidebar-header">
+                    <div class="ai-sidebar-title">
+                        <span>🤖</span>
+                        AI Assistant
+                        <span class="ai-badge">PRO</span>
+                    </div>
+                    <button class="close-sidebar" onclick="toggleAISidebar()">×</button>
+                </div>
+                <div class="ai-tabs">
+                    <button class="ai-tab active" onclick="switchAITab('chat')">💬 Chat</button>
+                    <button class="ai-tab" onclick="switchAITab('suggestions')">💡 Suggestions</button>
+                    <button class="ai-tab" onclick="switchAITab('analyze')">📈 Analyze</button>
+                </div>
+                <div class="ai-content">
+                    <!-- Chat Tab -->
+                    <div class="ai-chat" id="chatTab">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-message ai">
+                                Hello! I'm your AI Excel assistant. I can help you with:
+                                <br>• Writing complex formulas
+                                <br>• Analyzing your data
+                                <br>• Generating sample datasets
+                                <br>• Creating charts and visualizations
+                                <br>• Data cleanup and validation
+                                <br><br>How can I help you today?
+                            </div>
+                        </div>
+                        <div class="chat-input-container">
+                            <textarea class="chat-input" id="chatInput" placeholder="Ask me anything about your spreadsheet..." rows="1" onkeydown="handleChatKey(event)"></textarea>
+                            <button class="chat-send" onclick="sendChatMessage()">➤</button>
+                        </div>
+                    </div>
+
+                    <!-- Suggestions Tab -->
+                    <div class="ai-suggestions" id="suggestionsTab" style="display: none;">
+                        <div class="quick-actions">
+                            <button class="quick-action" onclick="generateSalesData()">
+                                <span class="quick-action-icon">📊</span>
+                                Sales Data
+                            </button>
+                            <button class="quick-action" onclick="generateFinancialData()">
+                                <span class="quick-action-icon">💰</span>
+                                Financial Data
+                            </button>
+                            <button class="quick-action" onclick="generateInventoryData()">
+                                <span class="quick-action-icon">📦</span>
+                                Inventory Data
+                            </button>
+                            <button class="quick-action" onclick="generateProjectTimeline()">
+                                <span class="quick-action-icon">📅</span>
+                                Project Timeline
+                            </button>
+                        </div>
+                        <div class="suggestion-card" onclick="suggestFormulas()">
+                            <div class="suggestion-title"><span class="icon">🔢</span> Smart Formulas</div>
+                            <div class="suggestion-desc">Get AI-powered formula suggestions</div>
+                        </div>
+                        <div class="suggestion-card" onclick="openChartWizard()">
+                            <div class="suggestion-title"><span class="icon">📊</span> Chart Recommendations</div>
+                            <div class="suggestion-desc">Discover the best chart types</div>
+                        </div>
+                        <div class="suggestion-card" onclick="getAIInsights()">
+                            <div class="suggestion-title"><span class="icon">💡</span> AI Insights</div>
+                            <div class="suggestion-desc">Get intelligent data insights</div>
+                        </div>
+                    </div>
+
+                    <!-- Analyze Tab -->
+                    <div class="analysis-panel" id="analyzeTab" style="display: none;">
+                        <div class="analysis-stats" id="analysisStats">
+                            <div class="stat-card">
+                                <div class="stat-label">Sum</div>
+                                <div class="stat-value" id="statSum">-</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Average</div>
+                                <div class="stat-value" id="statAvg">-</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Min</div>
+                                <div class="stat-value" id="statMin">-</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Max</div>
+                                <div class="stat-value" id="statMax">-</div>
+                            </div>
+                        </div>
+                        <div class="suggestion-card" onclick="getAIInsights()">
+                            <div class="suggestion-title"><span class="icon">💡</span> Get AI Insights</div>
+                            <div class="suggestion-desc">Receive AI-powered insights</div>
+                        </div>
+                        <div class="suggestion-card" onclick="openChartWizard()">
+                            <div class="suggestion-title"><span class="icon">📈</span> Create Visualization</div>
+                            <div class="suggestion-desc">Generate a chart from your data</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="selectionInfo">Ready</span>
+            </div>
+            <div class="status-right">
+                <span>50 rows × 26 columns</span>
+                <span>🤖 AI Enabled</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Modal -->
+    <div class="ai-modal" id="aiModal">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <div class="ai-modal-title">
+                    <span>🤖</span> AI Wizard
+                </div>
+                <button class="ai-modal-close" onclick="closeAIModal()">×</button>
+            </div>
+            <div class="ai-modal-body" id="aiModalBody">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">Action completed!</div>
+
+    <script>
+        // Spreadsheet Configuration
+        const ROWS = 50;
+        const COLS = 26;
+        const COL_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        // State
+        let spreadsheetData = {};
+        let cellStyles = {};
+        let selectedCell = null;
+        let isEditing = false;
+        let undoStack = [];
+        let redoStack = [];
+
+        // Initialize Spreadsheet
+        function initSpreadsheet() {
+            const spreadsheet = document.getElementById('spreadsheet');
+            spreadsheet.innerHTML = '';
+
+            const corner = document.createElement('div');
+            corner.className = 'corner-header';
+            spreadsheet.appendChild(corner);
+
+            for (let col = 0; col < COLS; col++) {
+                const colHeader = document.createElement('div');
+                colHeader.className = 'col-header';
+                colHeader.textContent = COL_LABELS[col];
+                spreadsheet.appendChild(colHeader);
+            }
+
+            for (let row = 1; row <= ROWS; row++) {
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'row-header';
+                rowHeader.textContent = row;
+                spreadsheet.appendChild(rowHeader);
+
+                for (let col = 0; col < COLS; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = COL_LABELS[col];
+                    cell.id = `${COL_LABELS[col]}${row}`;
+                    cell.contentEditable = false;
+                    
+                    cell.addEventListener('click', () => selectCell(cell));
+                    cell.addEventListener('dblclick', () => startEditing(cell));
+                    cell.addEventListener('keydown', (e) => handleCellKeydown(e, cell));
+                    
+                    spreadsheet.appendChild(cell);
+                }
+            }
+
+            spreadsheet.style.gridTemplateColumns = `50px repeat(${COLS}, 120px)`;
+            loadSampleData();
+        }
+
+        function loadSampleData() {
+            const sampleData = {
+                'A1': 'Product', 'B1': 'Q1 Sales', 'C1': 'Q2 Sales', 'D1': 'Q3 Sales', 'E1': 'Q4 Sales', 'F1': 'Total',
+                'A2': 'Widget A', 'B2': '12500', 'C2': '15800', 'D2': '14200', 'E2': '18900', 'F2': '=SUM(B2:E2)',
+                'A3': 'Widget B', 'B3': '9800', 'C3': '11200', 'D3': '10500', 'E3': '13400', 'F3': '=SUM(B3:E3)',
+                'A4': 'Widget C', 'B4': '15200', 'C4': '17800', 'D4': '16500', 'E4': '19200', 'F4': '=SUM(B4:E4)',
+                'A5': 'Widget D', 'B5': '8300', 'C5': '9500', 'D5': '8800', 'E5': '11200', 'F5': '=SUM(B5:E5)',
+                'A6': 'Widget E', 'B6': '11100', 'C6': '13400', 'D6': '12800', 'E6': '15600', 'F6': '=SUM(B6:E6)',
+                'A8': 'Total', 'B8': '=SUM(B2:B6)', 'C8': '=SUM(C2:C6)', 'D8': '=SUM(D2:D6)', 'E8': '=SUM(E2:E6)', 'F8': '=SUM(F2:F6)'
+            };
+
+            for (const [cell, value] of Object.entries(sampleData)) {
+                setCellValue(cell, value, false);
+            }
+
+            ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'A8'].forEach(cell => {
+                cellStyles[cell] = { ...cellStyles[cell], bold: true };
+            });
+            updateAllCells();
+        }
+
+        function selectCell(cell) {
+            if (isEditing) finishEditing();
+            if (selectedCell) selectedCell.classList.remove('selected');
+            selectedCell = cell;
+            cell.classList.add('selected');
+
+            const ref = cell.id;
+            document.getElementById('cellRef').textContent = ref;
+            document.getElementById('formulaInput').value = spreadsheetData[ref] || '';
+            document.getElementById('selectionInfo').textContent = `Selected: ${ref}`;
+        }
+
+        function startEditing(cell) {
+            selectCell(cell);
+            isEditing = true;
+            cell.classList.add('editing');
+            cell.innerHTML = `<input type="text" class="cell-input" value="${spreadsheetData[cell.id] || ''}" 
+                onblur="finishEditing()" onkeydown="handleEditKey(event)">`;
+            cell.querySelector('input').focus();
+        }
+
+        function finishEditing() {
+            if (!selectedCell) return;
+            const input = selectedCell.querySelector('input');
+            if (input) {
+                saveToUndo();
+                setCellValue(selectedCell.id, input.value);
+                selectedCell.classList.remove('editing');
+            }
+            isEditing = false;
+        }
+
+        function setCellValue(cellRef, value, update = true) {
+            spreadsheetData[cellRef] = value;
+            
+            if (typeof value === 'string' && value.startsWith('=')) {
+                const result = evaluateFormula(value.substring(1), cellRef);
+                const cell = document.getElementById(cellRef);
+                if (cell && !cell.classList.contains('editing')) cell.textContent = result;
+            } else {
+                const cell = document.getElementById(cellRef);
+                if (cell && !cell.classList.contains('editing')) cell.textContent = value;
+            }
+
+            if (update) updateAllCells();
+        }
+
+        function evaluateFormula(formula, currentCell) {
+            try {
+                const sumMatch = formula.match(/SUM\(([^)]+)\)/i);
+                if (sumMatch) return calculateSum(sumMatch[1]);
+                const avgMatch = formula.match(/AVERAGE\(([^)]+)\)/i);
+                if (avgMatch) return calculateAverage(avgMatch[1]);
+                const countMatch = formula.match(/COUNT\(([^)]+)\)/i);
+                if (countMatch) return calculateCount(countMatch[1]);
+                const maxMatch = formula.match(/MAX\(([^)]+)\)/i);
+                if (maxMatch) return calculateMax(maxMatch[1]);
+                const minMatch = formula.match(/MIN\(([^)]+)\)/i);
+                if (minMatch) return calculateMin(minMatch[1]);
+
+                let evalFormula = formula;
+                const cellRefs = formula.match(/[A-Z]+[0-9]+/g) || [];
+                cellRefs.forEach(ref => {
+                    const value = spreadsheetData[ref] || '0';
+                    const numValue = isNaN(parseFloat(value)) ? 0 : parseFloat(value);
+                    evalFormula = evalFormula.replace(ref, numValue);
+                });
+                return eval(evalFormula);
+            } catch (e) {
+                return '#ERROR!';
+            }
+        }
+
+        function calculateSum(range) {
+            const values = getRangeValues(range);
+            return values.reduce((a, b) => a + (parseFloat(b) || 0), 0);
+        }
+
+        function calculateAverage(range) {
+            const values = getRangeValues(range);
+            const nums = values.filter(v => !isNaN(parseFloat(v)));
+            return nums.length ? (nums.reduce((a, b) => a + parseFloat(b), 0) / nums.length).toFixed(2) : 0;
+        }
+
+        function calculateCount(range) {
+            const values = getRangeValues(range);
+            return values.filter(v => !isNaN(parseFloat(v))).length;
+        }
+
+        function calculateMax(range) {
+            const values = getRangeValues(range).map(v => parseFloat(v)).filter(v => !isNaN(v));
+            return values.length ? Math.max(...values) : 0;
+        }
+
+        function calculateMin(range) {
+            const values = getRangeValues(range).map(v => parseFloat(v)).filter(v => !isNaN(v));
+            return values.length ? Math.min(...values) : 0;
+        }
+
+        function getRangeValues(range) {
+            const values = [];
+            const parts = range.split(':');
+            
+            if (parts.length === 2) {
+                const startCol = parts[0].charCodeAt(0) - 65;
+                const startRow = parseInt(parts[0].substring(1));
+                const endCol = parts[1].charCodeAt(0) - 65;
+                const endRow = parseInt(parts[1].substring(1));
+
+                for (let row = startRow; row <= endRow; row++) {
+                    for (let col = startCol; col <= endCol; col++) {
+                        const cellRef = String.fromCharCode(65 + col) + row;
+                        values.push(spreadsheetData[cellRef] || '0');
+                    }
+                }
+            } else {
+                values.push(spreadsheetData[range] || '0');
+            }
+            return values;
+        }
+
+        function updateAllCells() {
+            for (const [cellRef, value] of Object.entries(spreadsheetData)) {
+                const cell = document.getElementById(cellRef);
+                if (cell && !cell.classList.contains('editing')) {
+                    if (typeof value === 'string' && value.startsWith('=')) {
+                        cell.textContent = evaluateFormula(value.substring(1), cellRef);
+                    } else {
+                        cell.textContent = value;
+                    }
+                }
+            }
+        }
+
+        function handleCellKeydown(e, cell) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const nextRow = parseInt(cell.dataset.row) + 1;
+                if (nextRow <= ROWS) {
+                    const nextCell = document.getElementById(`${cell.dataset.col}${nextRow}`);
+                    if (nextCell) selectCell(nextCell);
+                }
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                const colIdx = COL_LABELS.indexOf(cell.dataset.col);
+                const nextCol = COL_LABELS[colIdx + 1];
+                if (nextCol) {
+                    const nextCell = document.getElementById(`${nextCol}${cell.dataset.row}`);
+                    if (nextCell) selectCell(nextCell);
+                }
+            }
+        }
+
+        function handleEditKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                finishEditing();
+                const colIdx = COL_LABELS.indexOf(selectedCell.dataset.col);
+                const nextCol = COL_LABELS[colIdx + 1] || COL_LABELS[0];
+                const nextRow = e.shiftKey ? parseInt(selectedCell.dataset.row) - 1 : parseInt(selectedCell.dataset.row) + 1;
+                if (nextRow > 0 && nextRow <= ROWS) {
+                    const nextCell = document.getElementById(`${nextCol}${nextRow}`);
+                    if (nextCell) selectCell(nextCell);
+                }
+            } else if (e.key === 'Escape') {
+                isEditing = false;
+                selectedCell.classList.remove('editing');
+                updateAllCells();
+            }
+        }
+
+        function handleFormulaKey(e) {
+            if (e.key === 'Enter' && selectedCell) {
+                e.preventDefault();
+                saveToUndo();
+                setCellValue(selectedCell.id, document.getElementById('formulaInput').value);
+            }
+        }
+
+        function handleChatKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function saveToUndo() {
+            undoStack.push(JSON.stringify(spreadsheetData));
+            redoStack = [];
+            if (undoStack.length > 50) undoStack.shift();
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                redoStack.push(JSON.stringify(spreadsheetData));
+                spreadsheetData = JSON.parse(undoStack.pop());
+                updateAllCells();
+                showToast('Undo successful');
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                undoStack.push(JSON.stringify(spreadsheetData));
+                spreadsheetData = JSON.parse(redoStack.pop());
+                updateAllCells();
+                showToast('Redo successful');
+            }
+        }
+
+        function formatBold() {
+            if (selectedCell) {
+                const ref = selectedCell.id;
+                cellStyles[ref] = cellStyles[ref] || {};
+                cellStyles[ref].bold = !cellStyles[ref].bold;
+                updateCellStyle(selectedCell);
+                showToast('Bold toggled');
+            }
+        }
+
+        function formatItalic() {
+            if (selectedCell) {
+                const ref = selectedCell.id;
+                cellStyles[ref] = cellStyles[ref] || {};
+                cellStyles[ref].italic = !cellStyles[ref].italic;
+                updateCellStyle(selectedCell);
+                showToast('Italic toggled');
+            }
+        }
+
+        function formatUnderline() {
+            if (selectedCell) {
+                const ref = selectedCell.id;
+                cellStyles[ref] = cellStyles[ref] || {};
+                cellStyles[ref].underline = !cellStyles[ref].underline;
+                updateCellStyle(selectedCell);
+                showToast('Underline toggled');
+            }
+        }
+
+        function updateCellStyle(cell) {
+            const ref = cell.id;
+            const style = cellStyles[ref] || {};
+            cell.classList.toggle('bold', style.bold);
+            cell.classList.toggle('italic', style.italic);
+            cell.classList.toggle('underline', style.underline);
+        }
+
+        function setAlignment(align) {
+            if (selectedCell) {
+                selectedCell.style.textAlign = align;
+                showToast(`Alignment: ${align}`);
+            }
+        }
+
+        function setTextColor(color) {
+            if (selectedCell && color) {
+                selectedCell.style.color = color;
+                showToast('Text color changed');
+            }
+        }
+
+        function setBgColor(color) {
+            if (selectedCell && color) {
+                selectedCell.style.backgroundColor = color + '40';
+                showToast('Background color changed');
+            }
+        }
+
+        function insertFunction(func) {
+            if (selectedCell) {
+                document.getElementById('formulaInput').value = func;
+                document.getElementById('formulaInput').focus();
+            }
+        }
+
+        function toggleAISidebar() {
+            document.getElementById('aiSidebar').classList.toggle('open');
+        }
+
+        function switchAITab(tab) {
+            document.querySelectorAll('.ai-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('chatTab').style.display = tab === 'chat' ? 'flex' : 'none';
+            document.getElementById('suggestionsTab').style.display = tab === 'suggestions' ? 'block' : 'none';
+            document.getElementById('analyzeTab').classList.toggle('active', tab === 'analyze');
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const messages = document.getElementById('chatMessages');
+            messages.innerHTML += `<div class="chat-message user">${message}</div>`;
+            input.value = '';
+            messages.innerHTML += `<div class="chat-message ai"><div class="loading"><span></span><span></span><span></span></div></div>`;
+            messages.scrollTop = messages.scrollHeight;
+
+            setTimeout(() => {
+                const loadingMsg = messages.querySelector('.loading')?.parentElement;
+                if (loadingMsg) loadingMsg.remove();
+                const response = generateAIResponse(message);
+                messages.innerHTML += `<div class="chat-message ai">${response}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            }, 1500);
+        }
+
+        function generateAIResponse(message) {
+            const lowerMsg = message.toLowerCase();
+            
+            if (lowerMsg.includes('sum') || lowerMsg.includes('total')) {
+                return `Use <code>=SUM(range)</code> - Example: <code>=SUM(A1:A10)</code> adds all values.`;
+            }
+            if (lowerMsg.includes('average') || lowerMsg.includes('mean')) {
+                return `Use <code>=AVERAGE(range)</code> - Example: <code>=AVERAGE(B2:B10)</code> calculates the mean.`;
+            }
+            if (lowerMsg.includes('formula') || lowerMsg.includes('function')) {
+                return `Common functions:<br>• <code>=SUM()</code> • <code>=AVERAGE()</code> • <code>=COUNT()</code> • <code>=MAX()</code> • <code>=MIN()</code> • <code>=IF()</code> • <code>=VLOOKUP()</code>`;
+            }
+            if (lowerMsg.includes('chart') || lowerMsg.includes('graph')) {
+                return `Click "Chart" in the Insert menu or use AI Wizard to create visualizations from your data!`;
+            }
+            if (lowerMsg.includes('analyze') || lowerMsg.includes('data')) {
+                return `Use the Analyze tab in AI sidebar for stats (sum, avg, min, max) or try AI Insights for intelligent observations!`;
+            }
+            if (lowerMsg.includes('generate') || lowerMsg.includes('sample')) {
+                return `Try these in AI Wizard: Sales Data, Financial Data, Inventory Data, or Project Timeline!`;
+            }
+
+            return `I can help with:<br>• 📊 Formulas & Functions<br>• 📈 Data Analysis<br>• 📊 Charts & Visualization<br>• 📝 Sample Data Generation<br>• 🧹 Data Cleanup<br><br>What would you like?`;
+        }
+
+        // AI Modal Functions
+        function toggleAIWizard() {
+            const modal = document.getElementById('aiModal');
+            const body = document.getElementById('aiModalBody');
+            
+            body.innerHTML = `
+                <div class="ai-wizard">
+                    <div class="wizard-step active">
+                        <div class="wizard-step-title">🤖 What would you like to do?</div>
+                        <div class="wizard-options">
+                            <div class="wizard-option" onclick="showDataGeneration()">
+                                <div class="wizard-option-icon">📊</div>
+                                <div class="wizard-option-title">Generate Data</div>
+                                <div class="wizard-option-desc">Create sample datasets</div>
+                            </div>
+                            <div class="wizard-option" onclick="openAIFunctions()">
+                                <div class="wizard-option-icon">🔢</div>
+                                <div class="wizard-option-title">Insert Function</div>
+                                <div class="wizard-option-desc">AI-powered formulas</div>
+                            </div>
+                            <div class="wizard-option" onclick="analyzeWithAI()">
+                                <div class="wizard-option-icon">📈</div>
+                                <div class="wizard-option-title">Analyze Data</div>
+                                <div class="wizard-option-desc">Get AI insights</div>
+                            </div>
+                            <div class="wizard-option" onclick="openChartWizard()">
+                                <div class="wizard-option-icon">📊</div>
+                                <div class="wizard-option-title">Create Chart</div>
+                                <div class="wizard-option-desc">Visualize your data</div>
+                            </div>
+                            <div class="wizard-option" onclick="cleanDataWithAI()">
+                                <div class="wizard-option-icon">🧹</div>
+                                <div class="wizard-option-title">Clean Data</div>
+                                <div class="wizard-option-desc">Fix data issues</div>
+                            </div>
+                            <div class="wizard-option" onclick="predictWithAI()">
+                                <div class="wizard-option-icon">🔮</div>
+                                <div class="wizard-option-title">Predict</div>
+                                <div class="wizard-option-desc">AI predictions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function showDataGeneration() {
+            const body = document.getElementById('aiModalBody');
+            body.innerHTML = `
+                <div class="ai-wizard">
+                    <div class="wizard-step active">
+                        <div class="wizard-step-title">📊 Select Data Type to Generate</div>
+                        <div class="data-options">
+                            <div class="data-option" onclick="generateAndClose('sales')">
+                                <div class="data-option-icon">💰</div>
+                                <div class="data-option-title">Sales Data</div>
+                                <div class="data-option-desc">Products, regions, quarterly sales</div>
+                            </div>
+                            <div class="data-option" onclick="generateAndClose('financial')">
+                                <div class="data-option-icon">🏦</div>
+                                <div class="data-option-title">Financial Data</div>
+                                <div class="data-option-desc">Revenue, expenses, profit</div>
+                            </div>
+                            <div class="data-option" onclick="generateAndClose('inventory')">
+                                <div class="data-option-icon">📦</div>
+                                <div class="data-option-title">Inventory</div>
+                                <div class="data-option-desc">Items, quantities, prices</div>
+                            </div>
+                            <div class="data-option" onclick="generateAndClose('project')">
+                                <div class="data-option-icon">📅</div>
+                                <div class="data-option-title">Project Timeline</div>
+                                <div class="data-option-desc">Tasks, dates, status</div>
+                            </div>
+                            <div class="data-option" onclick="generateAndClose('customers')">
+                                <div class="data-option-icon">👥</div>
+                                <div class="data-option-title">Customer Database</div>
+                                <div class="data-option-desc">Names, emails, locations</div>
+                            </div>
+                            <div class="data-option" onclick="generateAndClose('hr')">
+                                <div class="data-option-icon">👔</div>
+                                <div class="data-option-title">HR Data</div>
+                                <div class="data-option-desc">Employees, salaries, departments</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateAndClose(type) {
+            closeAIModal();
+            switch(type) {
+                case 'sales': generateSalesData(); break;
+                case 'financial': generateFinancialData(); break;
+                case 'inventory': generateInventoryData(); break;
+                case 'project': generateProjectTimeline(); break;
+                case 'customers': generateCustomerData(); break;
+                case 'hr': generateHRData(); break;
+            }
+        }
+
+        function openAIFunctions() {
+            const body = document.getElementById('aiModalBody');
+            body.innerHTML = `
+                <div class="function-categories">
+                    <button class="function-category active" onclick="filterFunctions('all')">All</button>
+                    <button class="function-category" onclick="filterFunctions('math')">Math</button>
+                    <button class="function-category" onclick="filterFunctions('text')">Text</button>
+                    <button class="function-category" onclick="filterFunctions('date')">Date</button>
+                    <button class="function-category" onclick="filterFunctions('logical')">Logical</button>
+                    <button class="function-category" onclick="filterFunctions('lookup')">Lookup</button>
+                    <button class="function-category" onclick="filterFunctions('statistical')">Statistical</button>
+                </div>
+                <div class="function-list" id="functionList">
+                    ${getAllFunctionsHTML()}
+                </div>
+            `;
+        }
+
+        function getAllFunctionsHTML() {
+            const functions = [
+                { name: '=SUM()', cat: 'math', desc: 'Adds all numbers in a range' },
+                { name: '=AVERAGE()', cat: 'statistical', desc: 'Returns the average of arguments' },
+                { name: '=COUNT()', cat: 'statistical', desc: 'Counts cells with numbers' },
+                { name: '=MAX()', cat: 'statistical', desc: 'Returns maximum value' },
+                { name: '=MIN()', cat: 'statistical', desc: 'Returns minimum value' },
+                { name: '=IF()', cat: 'logical', desc: 'Returns value based on condition' },
+                { name: '=VLOOKUP()', cat: 'lookup', desc: 'Searches for value in first column' },
+                { name: '=HLOOKUP()', cat: 'lookup', desc: 'Searches for value in first row' },
+                { name: '=CONCATENATE()', cat: 'text', desc: 'Joins text strings' },
+                { name: '=LEFT()', cat: 'text', desc: 'Returns leftmost characters' },
+                { name: '=RIGHT()', cat: 'text', desc: 'Returns rightmost characters' },
+                { name: '=MID()', cat: 'text', desc: 'Returns characters from middle' },
+                { name: '=TODAY()', cat: 'date', desc: 'Returns current date' },
+                { name: '=NOW()', cat: 'date', desc: 'Returns current date and time' },
+                { name: '=YEAR()', cat: 'date', desc: 'Returns year from date' },
+                { name: '=MONTH()', cat: 'date', desc: 'Returns month from date' },
+                { name: '=DAY()', cat: 'date', desc: 'Returns day from date' },
+                { name: '=AND()', cat: 'logical', desc: 'Returns TRUE if all true' },
+                { name: '=OR()', cat: 'logical', desc: 'Returns TRUE if any true' },
+                { name: '=NOT()', cat: 'logical', desc: 'Reverses logical value' },
+                { name: '=POWER()', cat: 'math', desc: 'Returns power of number' },
+                { name: '=SQRT()', cat: 'math', desc: 'Returns square root' },
+                { name: '=ROUND()', cat: 'math', desc: 'Rounds to specified digits' },
+                { name: '=ABS()', cat: 'math', desc: 'Returns absolute value' }
+            ];
+
+            return functions.map(f => `
+                <div class="function-item" onclick="insertFunction('${f.name}')">
+                    <div class="function-name">${f.name}</div>
+                    <div class="function-desc">${f.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        function filterFunctions(cat) {
+            document.querySelectorAll('.function-category').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            // Show filtered functions
+            showToast(`${cat.charAt(0).toUpperCase() + cat.slice(1)} functions`);
+        }
+
+        function closeAIModal() {
+            document.getElementById('aiModal').classList.remove('active');
+        }
+
+        function analyzeWithAI() {
+            if (!selectedCell) {
+                showToast('Please select a cell first');
+                return;
+            }
+
+            const ref = selectedCell.id;
+            const col = ref.charAt(0);
+            
+            let values = [];
+            for (let r = 1; r <= ROWS; r++) {
+                const val = spreadsheetData[`${col}${r}`];
+                if (val && !isNaN(parseFloat(val))) {
+                    values.push(parseFloat(val));
+                }
+            }
+            
+            if (values.length > 0) {
+                const sum = values.reduce((a, b) => a + b, 0);
+                const avg = sum / values.length;
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                
+                document.getElementById('statSum').textContent = sum.toLocaleString();
+                document.getElementById('statAvg').textContent = avg.toFixed(2);
+                document.getElementById('statMin').textContent = min.toLocaleString();
+                document.getElementById('statMax').textContent = max.toLocaleString();
+                
+                toggleAISidebar();
+                switchAITab('analyze');
+                showToast('Data analyzed with AI!');
+                addChatMessage(`📊 Analysis: Sum=${sum.toLocaleString()}, Avg=${avg.toFixed(2)}, Min=${min}, Max=${max}`);
+            } else {
+                showToast('No numeric data found in column');
+            }
+        }
+
+        function getAIInsights() {
+            const insights = [
+                '📊 Your data shows interesting patterns',
+                '📈 Consider using a trendline for visualization',
+                '💡 The distribution appears relatively balanced',
+                '⚠️ Check for outliers in high-value ranges',
+                '🎯 Average values are within expected ranges'
+            ];
+            
+            const randomInsight = insights[Math.floor(Math.random() * insights.length)];
+            addChatMessage(randomInsight);
+            showToast('AI Insight: ' + randomInsight);
+        }
+
+        function openChartWizard() {
+            alert('📊 Chart Wizard\n\nSelect your data range and choose a chart type:\n\n📊 Bar Chart - Comparisons\n📈 Line Chart - Trends\n🥧 Pie Chart - Distribution\n📉 Area Chart - Volume\n\nAI will recommend the best chart type based on your data!');
+            addChatMessage('Chart wizard opened - select data range for AI recommendations');
+        }
+
+        function generateWithAI() {
+            toggleAIWizard();
+        }
+
+        function cleanDataWithAI() {
+            alert('🧹 AI Data Cleanup\n\nI can help with:\n\n✓ Remove duplicates\n✓ Trim whitespace\n✓ Fix formatting\n✓ Standardize case\n✓ Find & replace\n\nSelect your data range to begin!');
+            addChatMessage('Data cleanup options presented');
+        }
+
+        function predictWithAI() {
+            alert('🔮 AI Prediction\n\nThis feature analyzes your historical data to:\n\n• Forecast future values\n• Identify trends\n• Detect seasonality\n• Generate predictions\n\nComing soon in premium version!');
+        }
+
+        function generateSalesData() {
+            const products = ['Product A', 'Product B', 'Product C', 'Product D', 'Product E'];
+            const regions = ['North', 'South', 'East', 'West'];
+            
+            let row = 15;
+            saveToUndo();
+            
+            setCellValue(`A${row}`, 'Region');
+            setCellValue(`B${row}`, 'Product');
+            setCellValue(`C${row}`, 'Q1');
+            setCellValue(`D${row}`, 'Q2');
+            setCellValue(`E${row}`, 'Q3');
+            setCellValue(`F${row}`, 'Q4');
+            
+            ['A', 'B', 'C', 'D', 'E', 'F'].forEach(col => {
+                cellStyles[`${col}${row}`] = { bold: true };
+            });
+            
+            row++;
+            products.forEach((product) => {
+                regions.forEach((region) => {
+                    setCellValue(`A${row}`, region);
+                    setCellValue(`B${row}`, product);
+                    setCellValue(`C${row}`, Math.floor(Math.random() * 5000) + 1000);
+                    setCellValue(`D${row}`, Math.floor(Math.random() * 5000) + 1000);
+                    setCellValue(`E${row}`, Math.floor(Math.random() * 5000) + 1000);
+                    setCellValue(`F${row}`, Math.floor(Math.random() * 5000) + 1000);
+                    row++;
+                });
+            });
+            
+            updateAllCells();
+            showToast('Sales data generated!');
+        }
+
+        function generateFinancialData() {
+            let row = 15;
+            saveToUndo();
+            
+            setCellValue(`A${row}`, 'Month');
+            setCellValue(`B${row}`, 'Revenue');
+            setCellValue(`C${row}`, 'Expenses');
+            setCellValue(`D${row}`, 'Profit');
+            setCellValue(`E${row}`, 'Margin %');
+            
+            ['A', 'B', 'C', 'D', 'E'].forEach(col => {
+                cellStyles[`${col}${row}`] = { bold: true };
+            });
+            
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            row++;
+            months.forEach(month => {
+                const revenue = Math.floor(Math.random() * 50000) + 30000;
+                const expenses = Math.floor(revenue * (0.4 + Math.random() * 0.3));
+                const profit = revenue - expenses;
+                const margin = ((profit / revenue) * 100).toFixed(1);
+                
+                setCellValue(`A${row}`, month);
+                setCellValue(`B${row}`, revenue);
+                setCellValue(`C${row}`, expenses);
+                setCellValue(`D${row}`, profit);
+                setCellValue(`E${row}`, margin + '%');
+                row++;
+            });
+            
+            updateAllCells();
+            showToast('Financial data generated!');
+        }
+
+        function generateInventoryData() {
+            const items = ['Widget', 'Gadget', 'Gizmo', 'Doohickey', 'Thingamajig'];
+            const categories = ['Electronics', 'Hardware', 'Software', 'Accessories'];
+            
+            let row = 15;
+            saveToUndo();
+            
+            setCellValue(`A${row}`, 'Item');
+            setCellValue(`B${row}`, 'Category');
+            setCellValue(`C${row}`, 'Quantity');
+            setCellValue(`D${row}`, 'Unit Price');
+            setCellValue(`E${row}`, 'Total Value');
+            
+            ['A', 'B', 'C', 'D', 'E'].forEach(col => {
+                cellStyles[`${col}${row}`] = { bold: true };
+            });
+            
+            row++;
+            items.forEach((item, i) => {
+                const qty = Math.floor(Math.random() * 500) + 50;
+                const price = Math.floor(Math.random() * 100) + 10;
+                
+                setCellValue(`A${row}`, item);
+                setCellValue(`B${row}`, categories[i % categories.length]);
+                setCellValue(`C${row}`, qty);
+                setCellValue(`D${row}`, price);
+                setCellValue(`E${row}`, `=C${row}*D${row}`);
+                row++;
+            });
+            
+            updateAllCells();
+            showToast('Inventory data generated!');
+        }
+
+        function generateProjectTimeline() {
+            const tasks = ['Planning', 'Design', 'Development', 'Testing', 'Deployment', 'Maintenance'];
+            const statuses = ['Not Started', 'In Progress', 'Completed', 'On Hold'];
+            
+            let row = 15;
+            saveToUndo();
+            
+            setCellValue(`A${row}`, 'Task');
+            setCellValue(`B${row}`, 'Start Date');
+            setCellValue(`C${row}`, 'End Date');
+            setCellValue(`D${row}`, 'Status');
+            setCellValue(`E${row}`, 'Priority');
+            
+            ['A', 'B', 'C', 'D', 'E'].forEach(col => {
+                cellStyles[`${col}${row}`] = { bold: true };
+            });
+            
+            const startDate = new Date();
+            row++;
+            tasks.forEach((task, i) => {
+                const start = new Date(startDate);
+                start.setDate(start.getDate() + (i * 7));
+                const end = new Date(start);
+                end.setDate(end.getDate() + 7);
+                
+                setCellValue(`A${row}`, task);
+                setCellValue(`B${row}`, start.toLocaleDateString());
+                setCellValue(`C${row}`, end.toLocaleDateString());
+                setCellValue(`D${row}`, statuses[Math.floor(Math.random() * statuses.length)]);
+                setCellValue(`E${row}`, ['High', 'Medium', 'Low'][Math.floor(Math.random() * 3)]);
+                row++;
+            });
+            
+            updateAllCells();
+            showToast('Project timeline generated!');
+        }
+
+        function generateCustomerData() {
+            const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emily', 'Chris', 'Lisa', 'James', 'Mary'];
+            const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+            const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose'];
+            
+            let row = 15;
+            saveToUndo();
+            
+            setCellValue(`A${row}`, 'First Name');
+            setCellValue(`B${row}`, 'Last Name');
+            setCellValue(`C${row}`, 'Email');
+            setCellValue(`D${row}`, 'Phone');
+            setCellValue(`E${row}`, 'City');
+            setCellValue(`F${row}`, 'Country');
+            
+            ['A', 'B', 'C', 'D', 'E', 'F'].forEach(col => {
+                cellStyles[`${col}${row}`] = { bold: true };
+            });
+            
+            row++;
+            for (let i = 0; i < 20; i++) {
+                const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+                const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+                const city = cities[Math.floor(Math.random() * cities.length)];
+                
+                setCellValue(`A${row}`, firstName);
+                setCellValue(`B${row}`, lastName);
+                setCellValue(`C${row}`, `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`);
+                setCellValue(`D${row}`, `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`);
+                setCellValue(`E${row}`, city);
+                setCellValue(`F${row}`, 'USA');
+                row++;
+            }
+            
+            updateAllCells();
+            showToast('Customer data generated!');
+        }
+
+        function generateHRData() {
+            const departments = ['Engineering', 'Sales', 'Marketing', 'HR', 'Finance', 'Operations'];
+            const positions = ['Manager', 'Senior', 'Junior', 'Intern', 'Director', 'Lead'];
+            const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
+            
+            let row = 15;
+            saveToUndo();
+            
+            setCellValue(`A${row}`, 'Employee ID');
+            setCellValue(`B${row}`, 'Name');
+            setCellValue(`C${row}`, 'Department');
+            setCellValue(`D${row}`, 'Position');
+            setCellValue(`E${row}`, 'Salary');
+            setCellValue(`F${row}`, 'Start Date');
+            
+            ['A', 'B', 'C', 'D', 'E', 'F'].forEach(col => {
+                cellStyles[`${col}${row}`] = { bold: true };
+            });
+            
+            row++;
+            for (let i = 0; i < 15; i++) {
+                const name = names[Math.floor(Math.random() * names.length)];
+                const dept = departments[Math.floor(Math.random() * departments.length)];
+                const pos = positions[Math.floor(Math.random() * positions.length)];
+                const salary = Math.floor(Math.random() * 80000) + 40000;
+                
+                const startDate = new Date();
+                startDate.setFullYear(startDate.getFullYear() - Math.floor(Math.random() * 10));
+                
+                setCellValue(`A${row}`, `EMP${String(i + 1001).padStart(4, '0')}`);
+                setCellValue(`B${row}`, name);
+                setCellValue(`C${row}`, dept);
+                setCellValue(`D${row}`, pos);
+                setCellValue(`E${row}`, salary);
+                setCellValue(`F${row}`, startDate.toLocaleDateString());
+                row++;
+            }
+            
+            updateAllCells();
+            showToast('HR data generated!');
+        }
+
+        // File Operations
+        function newSpreadsheet() {
+            if (confirm('Create a new spreadsheet? Unsaved changes will be lost.')) {
+                spreadsheetData = {};
+                cellStyles = {};
+                selectedCell = null;
+                undoStack = [];
+                redoStack = [];
+                initSpreadsheet();
+                showToast('New spreadsheet created');
+            }
+        }
+
+        function saveSpreadsheet() {
+            const data = {
+                spreadsheetData,
+                cellStyles
+            };
+            localStorage.setItem('excelAI_data', JSON.stringify(data));
+            showToast('Spreadsheet saved!');
+        }
+
+        function exportToCSV() {
+            let csv = '';
+            for (let row = 1; row <= ROWS; row++) {
+                let rowData = [];
+                for (let col = 0; col < COLS; col++) {
+                    const cellRef = COL_LABELS[col] + row;
+                    const value = spreadsheetData[cellRef] || '';
+                    rowData.push('"' + value.toString().replace(/"/g, '""') + '"');
+                }
+                csv += rowData.join(',') + '\n';
+            }
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'spreadsheet.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported to CSV');
+        }
+
+        function exportToJSON() {
+            const data = {
+                spreadsheetData,
+                cellStyles,
+                exportedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'spreadsheet.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported to JSON');
+        }
+
+        // Data Operations
+        function insertRow() {
+            if (!selectedCell) {
+                showToast('Select a cell first');
+                return;
+            }
+            saveToUndo();
+            const row = parseInt(selectedCell.dataset.row);
+            
+            for (let r = ROWS - 1; r > row; r--) {
+                for (let col = 0; col < COLS; col++) {
+                    const cellRef = COL_LABELS[col] + r;
+                    const nextRef = COL_LABELS[col] + (r + 1);
+                    spreadsheetData[nextRef] = spreadsheetData[cellRef];
+                    cellStyles[nextRef] = cellStyles[cellRef];
+                }
+            }
+            
+            for (let col = 0; col < COLS; col++) {
+                const cellRef = COL_LABELS[col] + (row + 1);
+                spreadsheetData[cellRef] = '';
+                cellStyles[cellRef] = {};
+            }
+            
+            updateAllCells();
+            showToast('Row inserted');
+        }
+
+        function insertColumn() {
+            if (!selectedCell) {
+                showToast('Select a cell first');
+                return;
+            }
+            saveToUndo();
+            const colIdx = COL_LABELS.indexOf(selectedCell.dataset.col);
+            
+            for (let col = COLS - 1; col > colIdx; col--) {
+                for (let row = 1; row <= ROWS; row++) {
+                    const cellRef = COL_LABELS[col] + row;
+                    const nextRef = COL_LABELS[col + 1] + row;
+                    spreadsheetData[nextRef] = spreadsheetData[cellRef];
+                    cellStyles[nextRef] = cellStyles[cellRef];
+                }
+            }
+            
+            for (let row = 1; row <= ROWS; row++) {
+                const cellRef = COL_LABELS[colIdx + 1] + row;
+                spreadsheetData[cellRef] = '';
+                cellStyles[cellRef] = {};
+            }
+            
+            updateAllCells();
+            showToast('Column inserted');
+        }
+
+        function analyzeSelectedData() {
+            if (!selectedCell) {
+                showToast('Select a cell first');
+                return;
+            }
+            analyzeWithAI();
+        }
+
+        function sortData() {
+            showToast('Select a range and use Sort menu');
+        }
+
+        function filterData() {
+            showToast('Filter functionality - use Data menu');
+        }
+
+        function removeDuplicates() {
+            showToast('Checking for duplicates...');
+            const values = Object.values(spreadsheetData);
+            const unique = new Set(values);
+            if (values.length > unique.size) {
+                showToast(`Found ${values.length - unique.size} duplicates`);
+            } else {
+                showToast('No duplicates found');
+            }
+        }
+
+        function validateData() {
+            showToast('Data validation - select cells and choose validation type');
+        }
+
+        function suggestFormulas() {
+            if (!selectedCell) {
+                showToast('Select a cell first');
+                return;
+            }
+            openAIFunctions();
+        }
+
+        // Help Functions
+        function showHelp() {
+            alert('📖 Excel AI Help\n\n' +
+                'Getting Started:\n' +
+                '• Click a cell to select it\n' +
+                '• Double-click to edit\n' +
+                '• Use formula bar for formulas\n\n' +
+                'Formulas:\n' +
+                '• Start with = for formulas\n' +
+                '• Examples: =SUM(A1:A10), =AVERAGE(B1:B5)\n\n' +
+                'AI Features:\n' +
+                '• Click AI Wizard for智能 assistance\n' +
+                '• Use AI sidebar for chat and suggestions\n\n' +
+                'Keyboard Shortcuts:\n' +
+                '• Ctrl+B: Bold\n' +
+                '• Ctrl+I: Italic\n' +
+                '• Ctrl+U: Underline\n' +
+                '• Ctrl+Z: Undo\n' +
+                '• Ctrl+Y: Redo');
+        }
+
+        function showShortcuts() {
+            alert('⌨️ Keyboard Shortcuts\n\n' +
+                'General:\n' +
+                '• Ctrl+N: New spreadsheet\n' +
+                '• Ctrl+S: Save\n' +
+                '• Ctrl+Z: Undo\n' +
+                '• Ctrl+Y: Redo\n\n' +
+                'Formatting:\n' +
+                '• Ctrl+B: Bold\n' +
+                '• Ctrl+I: Italic\n' +
+                '• Ctrl+U: Underline\n\n' +
+                'Navigation:\n' +
+                '• Arrow keys: Move cell\n' +
+                '• Tab: Next cell\n' +
+                '• Enter: Confirm & move down\n' +
+                '• Escape: Cancel edit');
+        }
+
+        function addChatMessage(message) {
+            const messages = document.getElementById('chatMessages');
+            if (messages) {
+                messages.innerHTML += `<div class="chat-message ai">${message}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', initSpreadsheet);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'b':
+                        e.preventDefault();
+                        formatBold();
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        formatItalic();
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        formatUnderline();
+                        break;
+                    case 'z':
+                        e.preventDefault();
+                        undo();
+                        break;
+                    case 'y':
+                        e.preventDefault();
+                        redo();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        saveSpreadsheet();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        newSpreadsheet();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
+        function generateProjectTimeline() {
